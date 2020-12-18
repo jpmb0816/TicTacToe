@@ -30,6 +30,8 @@ class GameEngine {
 		this.hasWinner = false;
 		this.winner = '';
 
+		this.playAgainKey = (isMobile ? 'Touch the screen' : 'Press Enter');
+
 		this.createCanvas(this.MAX_WIDTH, this.MAX_HEIGHT);
 	}
 
@@ -98,7 +100,10 @@ class GameEngine {
 				}
 			}
 
-			if (this.isWinner('X')) {
+			if (this.isFull()) {
+				this.running = false;
+			}
+			else if (this.isWinner('X')) {
 				this.hasWinner = true;
 				this.winner = 'X';
 				this.running = false;
@@ -138,9 +143,9 @@ class GameEngine {
 		this.renderText(this.title, this.centerX, 240, 'white', 'center');
 		this.renderText('By: ' + this.author, this.centerX, 270, 'white', 'center');
 
-		this.renderText('[Press Enter to Play]', this.centerX, 340, 'white', 'center', '15px san-serif');
+		this.renderText('[' + this.playAgainKey + ' to Play]', this.centerX, 340, 'white', 'center', '15px san-serif');
 
-		if (keypress[13]) {
+		if (isMobile && mouse.click || keypress[13]) {
 			this.running = true;
 			this.recentlyStarted = false;
 			this.initRects();
@@ -156,10 +161,12 @@ class GameEngine {
 	}
 
 	renderPlayAgainScreen() {
-		this.renderText('Player ' + this.winner + ', Wins!', this.centerX, 320, 'yellow', 'center', '15px san-serif');
-		this.renderText('[Press Enter to Play Again]', this.centerX, 350, 'white', 'center', '15px san-serif');
+		const winnerInfo = (this.hasWinner ? 'Player ' + this.winner + ', Wins!' : 'It\'s a Tie!');
 
-		if (keypress[13]) {
+		this.renderText(winnerInfo, this.centerX, 320, 'yellow', 'center', '15px san-serif');
+		this.renderText('[' + this.playAgainKey + ' to Play Again]', this.centerX, 350, 'white', 'center', '15px san-serif');
+
+		if (isMobile && mouse.click || keypress[13]) {
 			this.running = true;
 			this.restartGame();
 		}
@@ -213,5 +220,17 @@ class GameEngine {
 
 				(board[0][0].text + board[1][1].text + board[2][2].text === player) ||
 				(board[0][2].text + board[1][1].text + board[2][0].text === player));
+	}
+
+	isFull() {
+		for (let y = 0; y < this.cols; y++) {
+			for (let x = 0; x < this.rows; x++) {
+				if (this.buttons[y][x].text === '') {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }
