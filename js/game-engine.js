@@ -150,6 +150,8 @@ class GameEngine {
 			this.recentlyStarted = false;
 			this.initRects();
 		}
+
+		mouse.click = false;
 	}
 
 	renderInGameScreen() {
@@ -170,6 +172,8 @@ class GameEngine {
 			this.running = true;
 			this.restartGame();
 		}
+
+		mouse.click = false;
 	}
 
 	// Canvas Functions
