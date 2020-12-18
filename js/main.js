@@ -5,12 +5,6 @@ const mouse = {
 	y: 0,
 	down: false,
 	click: false,
-	isClicked: function() {
-		const prev = this.click;
-		this.click = false;
-		
-		return prev;
-	}
 };
 const game = new GameEngine();
 const canvasBoundingClientRect = game.canvas.getBoundingClientRect();

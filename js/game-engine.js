@@ -27,9 +27,10 @@ class GameEngine {
 
 		this.buttons = [];
 		this.playerTurn = true;
+		this.hasWinner = false;
+		this.winner = '';
 
 		this.createCanvas(this.MAX_WIDTH, this.MAX_HEIGHT);
-		this.initRects();
 	}
 
 	// Main Functions
@@ -52,37 +53,64 @@ class GameEngine {
 		}
 	}
 
-	update() {
+	restartGame() {
+		this.playerTurn = true;
+		this.hasWinner = false;
+		this.winner = '';
+
 		for (let y = 0; y < this.cols; y++) {
 			for (let x = 0; x < this.rows; x++) {
-				const b = this.buttons[y][x];
+				this.buttons[y][x].text = '';
+			}
+		}
+	}
 
-				if (b.text != '') {
-					b.buttonColor = 'lightgray';
-				}
-				else if (b.collide(mouse)) {
-					if (mouse.down) {
-						b.buttonColor = 'green';
+	update() {
+		if (this.running) {
+			for (let y = 0; y < this.cols; y++) {
+				for (let x = 0; x < this.rows; x++) {
+					const b = this.buttons[y][x];
+
+					if (b.text != '') {
+						b.buttonColor = 'lightgray';
 					}
-					else if (mouse.isClicked()) {
-						if (this.playerTurn) {
-							b.text = 'X';
-							this.playerTurn = false;
+					else if (b.collide(mouse)) {
+						if (mouse.down) {
+							b.buttonColor = 'green';
+						}
+						else if (mouse.click) {
+							if (this.playerTurn) {
+								b.text = 'X';
+								this.playerTurn = false;
+							}
+							else {
+								b.text = 'O';
+								this.playerTurn = true;
+							}
 						}
 						else {
-							b.text = 'O';
-							this.playerTurn = true;
+							b.buttonColor = 'lightgray';
 						}
 					}
 					else {
-						b.buttonColor = 'lightgray';
+						b.buttonColor = 'gray';
 					}
 				}
-				else {
-					b.buttonColor = 'gray';
-				}
+			}
+
+			if (this.isWinner('X')) {
+				this.hasWinner = true;
+				this.winner = 'X';
+				this.running = false;
+			}
+			else if (this.isWinner('O')) {
+				this.hasWinner = true;
+				this.winner = 'O';
+				this.running = false;
 			}
 		}
+
+		mouse.click = false;
 	}
 
 	render() {
@@ -97,16 +125,6 @@ class GameEngine {
 		else {
 			this.renderPlayAgainScreen();
 		}
-
-		for (let y = 0; y < this.cols; y++) {
-			for (let x = 0; x < this.rows; x++) {
-				this.buttons[y][x].render(this.ctx);
-			}
-		}
-		
-		this.ctx.beginPath();
-		this.ctx.arc(mouse.x, mouse.y, 2, 0, 2 * Math.PI);
-		this.ctx.fill();
 	}
 
 	// Render Screen Functions
@@ -125,20 +143,25 @@ class GameEngine {
 		if (keypress[13]) {
 			this.running = true;
 			this.recentlyStarted = false;
-			this.init();
+			this.initRects();
 		}
 	}
 
 	renderInGameScreen() {
-		//
+		for (let y = 0; y < this.cols; y++) {
+			for (let x = 0; x < this.rows; x++) {
+				this.buttons[y][x].render(this.ctx);
+			}
+		}
 	}
 
 	renderPlayAgainScreen() {
-		this.renderText('You lose!', this.centerX, 320, 'yellow', 'center', '15px san-serif');
+		this.renderText('Player ' + this.winner + ', Wins!', this.centerX, 320, 'yellow', 'center', '15px san-serif');
 		this.renderText('[Press Enter to Play Again]', this.centerX, 350, 'white', 'center', '15px san-serif');
 
 		if (keypress[13]) {
-			this.init();
+			this.running = true;
+			this.restartGame();
 		}
 	}
 
@@ -174,5 +197,21 @@ class GameEngine {
 		this.canvas.height = height;
 
 		document.body.appendChild(this.canvas);
+	}
+
+	isWinner(player) {
+		const board = this.buttons;
+		player = player.repeat(3);
+
+		return ((board[0][0].text + board[0][1].text + board[0][2].text === player) ||
+				(board[1][0].text + board[1][1].text + board[1][2].text === player) ||
+				(board[2][0].text + board[2][1].text + board[2][2].text === player) ||
+
+				(board[0][0].text + board[1][0].text + board[2][0].text === player) ||
+				(board[0][1].text + board[1][1].text + board[2][1].text === player) ||
+				(board[0][2].text + board[1][2].text + board[2][2].text === player) ||
+
+				(board[0][0].text + board[1][1].text + board[2][2].text === player) ||
+				(board[0][2].text + board[1][1].text + board[2][0].text === player));
 	}
 }
