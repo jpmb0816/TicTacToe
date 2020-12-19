@@ -26,7 +26,12 @@ class GameEngine {
 		this.rectGap = 10;
 
 		this.buttons = [];
-		this.playerTurn = true;
+
+		this.empty = '';
+		this.player = 'X';
+		this.opponent = 'O';
+		this.currentPlayer = this.player;
+
 		this.hasWinner = false;
 		this.winner = '';
 
@@ -46,7 +51,7 @@ class GameEngine {
 			const arr = [];
 
 			for (let x = 0; x < this.rows; x++) {
-				arr.push(new Button('', (this.rectWidth * x) + (this.rectGap * (x + 1)),
+				arr.push(new Button(this.empty, (this.rectWidth * x) + (this.rectGap * (x + 1)),
 								(this.rectHeight * y) + (this.rectGap * (y + 1)),
 								this.rectWidth, this.rectHeight));
 			}
@@ -56,13 +61,13 @@ class GameEngine {
 	}
 
 	restartGame() {
-		this.playerTurn = true;
+		this.currentPlayer = this.player;
 		this.hasWinner = false;
 		this.winner = '';
 
 		for (let y = 0; y < this.cols; y++) {
 			for (let x = 0; x < this.rows; x++) {
-				this.buttons[y][x].text = '';
+				this.buttons[y][x].text = this.empty;
 			}
 		}
 	}
@@ -73,7 +78,7 @@ class GameEngine {
 				for (let x = 0; x < this.rows; x++) {
 					const b = this.buttons[y][x];
 
-					if (b.text != '') {
+					if (b.text != this.empty) {
 						b.buttonColor = 'lightgray';
 					}
 					else if (b.collide(mouse)) {
@@ -81,13 +86,9 @@ class GameEngine {
 							b.buttonColor = 'green';
 						}
 						else if (mouse.click) {
-							if (this.playerTurn) {
-								b.text = 'X';
-								this.playerTurn = false;
-							}
-							else {
-								b.text = 'O';
-								this.playerTurn = true;
+							if (this.currentPlayer === this.player) {
+								b.text = this.player;
+								this.currentPlayer = this.opponent;
 							}
 						}
 						else {
@@ -100,22 +101,30 @@ class GameEngine {
 				}
 			}
 
-			if (this.isFull()) {
+			if (this.isFull(this.buttons)) {
 				this.running = false;
 			}
-			else if (this.isWinner('X')) {
+			else if (this.isWinner(this.buttons, 'X')) {
 				this.hasWinner = true;
-				this.winner = 'X';
+				this.winner = this.player;
 				this.running = false;
+				this.highlightWinner(this.buttons, this.winner);
 			}
-			else if (this.isWinner('O')) {
+			else if (this.isWinner(this.buttons, 'O')) {
 				this.hasWinner = true;
-				this.winner = 'O';
+				this.winner = this.opponent;
 				this.running = false;
+				this.highlightWinner(this.buttons, this.winner);
 			}
-		}
+			else if (this.currentPlayer === this.opponent) {
+				const bestMove = this.aiMove(this.buttons);
+				this.buttons[bestMove.y][bestMove.x].text = this.opponent;
+				this.buttons[bestMove.y][bestMove.x].buttonColor = 'lightgray';
+				this.currentPlayer = this.player;
+			}
 
-		mouse.click = false;
+			mouse.click = false;
+		}
 	}
 
 	render() {
@@ -128,6 +137,12 @@ class GameEngine {
 			this.renderInGameScreen();
 		}
 		else {
+			this.renderInGameScreen();
+
+			this.ctx.globalAlpha = 0.8;
+			this.renderBackgroundScreen();
+			this.ctx.globalAlpha = 1;
+
 			this.renderPlayAgainScreen();
 		}
 	}
@@ -210,8 +225,56 @@ class GameEngine {
 		document.body.appendChild(this.canvas);
 	}
 
-	isWinner(player) {
-		const board = this.buttons;
+	highlightWinner(board, winner) {
+		winner = winner.repeat(3);
+		const p = this.player.repeat(3);
+		const color = (winner === p) ? 'green' : 'red';
+
+		if (board[0][0].text + board[0][1].text + board[0][2].text === winner) {
+			board[0][0].buttonColor = color;
+			board[0][1].buttonColor = color;
+			board[0][2].buttonColor = color;
+		}
+		else if (board[1][0].text + board[1][1].text + board[1][2].text === winner) {
+			board[1][0].buttonColor = color;
+			board[1][1].buttonColor = color;
+			board[1][2].buttonColor = color;
+		}
+		else if (board[2][0].text + board[2][1].text + board[2][2].text === winner) {
+			board[2][0].buttonColor = color;
+			board[2][1].buttonColor = color;
+			board[2][2].buttonColor = color;
+		}
+		//
+		else if (board[0][0].text + board[1][0].text + board[2][0].text === winner) {
+			board[0][0].buttonColor = color;
+			board[1][0].buttonColor = color;
+			board[2][0].buttonColor = color;
+		}
+		else if (board[0][1].text + board[1][1].text + board[2][1].text === winner) {
+			board[0][1].buttonColor = color;
+			board[1][1].buttonColor = color;
+			board[2][1].buttonColor = color;
+		}
+		else if (board[0][2].text + board[1][2].text + board[2][2].text === winner) {
+			board[0][2].buttonColor = color;
+			board[1][2].buttonColor = color;
+			board[2][2].buttonColor = color;
+		}
+		//
+		else if (board[0][0].text + board[1][1].text + board[2][2].text === winner) {
+			board[0][0].buttonColor = color;
+			board[1][1].buttonColor = color;
+			board[2][2].buttonColor = color;
+		}
+		else if (board[0][2].text + board[1][1].text + board[2][0].text === winner) {
+			board[0][2].buttonColor = color;
+			board[1][1].buttonColor = color;
+			board[2][0].buttonColor = color;
+		}
+	}
+
+	isWinner(board, player) {
 		player = player.repeat(3);
 
 		return ((board[0][0].text + board[0][1].text + board[0][2].text === player) ||
@@ -226,15 +289,89 @@ class GameEngine {
 				(board[0][2].text + board[1][1].text + board[2][0].text === player));
 	}
 
-	isFull() {
-		for (let y = 0; y < this.cols; y++) {
-			for (let x = 0; x < this.rows; x++) {
-				if (this.buttons[y][x].text === '') {
+	isFull(board) {
+		for (let y = 0; y < board.length; y++) {
+			for (let x = 0; x < board[y].length; x++) {
+				if (board[y][x].text === this.empty) {
 					return false;
 				}
 			}
 		}
 
 		return true;
+	}
+
+	getAvailableMoves(board) {
+		const moves = [];
+
+		for (let y = 0; y < board.length; y++) {
+			for (let x = 0; x < board[y].length; x++) {
+				if (board[y][x].text === this.empty) {
+					moves.push({y: y, x: x});
+				}
+			}
+		}
+
+		return moves;
+	}
+
+	minimax(board, depth, isMaximizing) {
+		if (this.isWinner(board, this.player)) {
+			return -1;
+		}
+		else if (this.isWinner(board, this.opponent)) {
+			return 1;
+		}
+		else if (this.isFull(board)) {
+			return 0;
+		}
+
+		if (isMaximizing) {
+			const moves = this.getAvailableMoves(board);
+			let bestScore = -Infinity;
+
+			for (let i = 0; i < moves.length; i++) {
+				board[moves[i].y][moves[i].x].text = this.opponent;
+				const score = this.minimax(board, depth + 1, false);
+				board[moves[i].y][moves[i].x].text = this.empty;
+
+				bestScore = Math.max(score, bestScore);
+			}
+
+			return bestScore;
+		}
+		else {
+			const moves = this.getAvailableMoves(board);
+			let bestScore = Infinity;
+
+			for (let i = 0; i < moves.length; i++) {
+				board[moves[i].y][moves[i].x].text = this.player;
+				const score = this.minimax(board, depth + 1, true);
+				board[moves[i].y][moves[i].x].text = this.empty;
+
+				bestScore = Math.min(score, bestScore);
+			}
+
+			return bestScore;
+		}
+	}
+
+	aiMove(board) {
+		const moves = this.getAvailableMoves(board);
+		let bestScore = -Infinity;
+		let bestMove = {y: -1, x: -1};
+
+		for (let i = 0; i < moves.length; i++) {
+			board[moves[i].y][moves[i].x].text = this.opponent;
+			const score = this.minimax(board, 0, false);
+			board[moves[i].y][moves[i].x].text = this.empty;
+
+			if (score > bestScore) {
+				bestScore = score;
+				bestMove = {y: moves[i].y, x: moves[i].x};
+			}
+		}
+
+		return bestMove;
 	}
 }
