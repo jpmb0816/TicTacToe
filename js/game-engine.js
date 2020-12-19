@@ -103,14 +103,12 @@ class GameEngine {
 
 			if (this.isFull(this.buttons)) {
 				this.running = false;
-				
+
 				for (let y = 0; y < this.cols; y++) {
 					for (let x = 0; x < this.rows; x++) {
 						const b = this.buttons[y][x];
 
-						if (b.buttonColor === 'green') {
-							b.buttonColor = 'lightgray';
-						}
+						b.buttonColor = 'lightgray';
 					}
 				}
 			}
