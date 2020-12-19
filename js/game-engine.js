@@ -200,7 +200,7 @@ class GameEngine {
 			}
 		}
 
-		this.renderText('Difficulty: ' + this.currentLevelText, 20, 40, 'white');
+		this.renderText('Difficulty: ' + this.currentLevelText, 20, 40, 'white', 'left', '20px san-serif');
 	}
 
 	renderPlayAgainScreen() {
