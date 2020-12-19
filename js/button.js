@@ -1,10 +1,11 @@
 class Button {
-	constructor(text, x, y, width, height) {
+	constructor(text, x, y, width, height, fontSize) {
 		this.text = text;
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
+		this.fontSize = fontSize;
 
 		this.buttonColor = 'gray';
 		this.textColor = 'black';
@@ -17,7 +18,7 @@ class Button {
 		ctx.textBaseline = 'middle';
 		ctx.textAlign = 'center';
 
-		ctx.font = '80px san-serif';
+		ctx.font = this.fontSize + 'px san-serif';
 		ctx.fillStyle = this.textColor;
 		ctx.fillText(this.text, this.x + (this.width / 2), this.y + (this.height / 2));
 
