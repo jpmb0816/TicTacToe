@@ -7,7 +7,6 @@ const mouse = {
 };
 
 const game = new GameEngine();
-const canvasBoundingClientRect = game.canvas.getBoundingClientRect();
 
 function render() {
 	requestAnimationFrame(render);
@@ -30,6 +29,7 @@ game.canvas.addEventListener('mouseup', (e) => {
 });
 
 document.addEventListener('mousemove', (e) => {
+	const canvasBoundingClientRect = game.canvas.getBoundingClientRect();
 	mouse.x = e.clientX - canvasBoundingClientRect.left;
 	mouse.y = e.clientY - canvasBoundingClientRect.top;
 });
